@@ -1,6 +1,6 @@
 # Sitolib
 
-A lightweight TypeScript CLI UI library for Node.js with ASCII tables, colorful logging, and rainbow effects.
+A general purpose library for my applications written in typescript and used for nodejs and anything else thats supports it idk
 
 ## Installation
 
