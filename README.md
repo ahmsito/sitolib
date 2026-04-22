@@ -92,7 +92,8 @@ core.writeLine({}, '#ff0000', 'Red ', '#00ff00', 'Green');
 core.createAlert('WARNING', '#ff0000', 'Important message');
 ```
 
-## API
+## Projects that use this
+* [OpenMP Upgrader](https://github.com/ahmsito/openmp-upgrader)
 
 ### AsciiTable
 
