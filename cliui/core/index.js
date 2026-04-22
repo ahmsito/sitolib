@@ -23,7 +23,10 @@ export class Core extends EventEmitter {
   }
 
   start(startProps = {}) {
-    process.stdout.write('\x1Bc');
+    // Only clear screen if this is the first start
+    if (!this.startProps) {
+      process.stdout.write('\x1Bc');
+    }
     
     this.startProps = {
       username: startProps.username || process.env.USER || process.env.USERNAME || 'user',
