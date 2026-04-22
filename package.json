@@ -1,0 +1,54 @@
+{
+  "name": "sitolib",
+  "version": "1.0.0",
+  "description": "A CLI UI library with ASCII table support and colorful logging",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./asciitable": "./cliui/asciitable/index.js",
+    "./core": "./cliui/core/index.js",
+    "./formatting": "./cliui/formatting/index.js",
+    "./hashing": "./security/hashing/index.js"
+  },
+  "files": [
+    "cliui",
+    "security",
+    "index.js",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node test.js",
+    "test:core": "node test-core.js",
+    "test:table": "node test.js",
+    "test:formatting": "node test-formatting.js",
+    "test:hashing": "node test-hashing.js"
+  },
+  "keywords": [
+    "cli",
+    "ui",
+    "ascii",
+    "table",
+    "logging",
+    "colors",
+    "rainbow",
+    "terminal",
+    "console",
+    "hashing",
+    "sha256",
+    "security"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/sitolib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/sitolib/issues"
+  },
+  "homepage": "https://github.com/yourusername/sitolib#readme",
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
