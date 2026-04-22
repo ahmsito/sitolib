@@ -1,4 +1,4 @@
-import { Core } from './dist/index.js';
+import { Core } from 'sitolib';
 
 const core = new Core();
 

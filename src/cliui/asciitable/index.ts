@@ -12,8 +12,10 @@ import { stripVTControlCharacters } from 'node:util';
 interface AsciiTableOptions {
   /** Show horizontal dividers between rows */
   showDividers?: boolean;
+  
   /** Center content when writing */
   centerOnWrite?: boolean;
+  
   /** Custom color mappings */
   colors?: Record<string, string>;
 }
@@ -24,8 +26,10 @@ interface AsciiTableOptions {
 interface Column {
   /** Column header text */
   header: string;
+  
   /** Unique column identifier */
   id: number;
+  
   /** Reference to parent table */
   parent: AsciiTable;
 }
@@ -36,8 +40,10 @@ interface Column {
 interface Row {
   /** Cell values in the row */
   cells: string[];
+  
   /** Unique row identifier */
   id: number;
+  
   /** Reference to parent table */
   parent: AsciiTable;
 }

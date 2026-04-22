@@ -1,4 +1,4 @@
-import { AsciiTable } from './dist/index.js';
+import { AsciiTable } from 'sitolib';
 
 // Create a new table
 const table = new AsciiTable({ showDividers: true });

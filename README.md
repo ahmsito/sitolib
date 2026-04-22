@@ -1,6 +1,6 @@
 # Sitolib
 
-A lightweight Node.js library with CLIUI features and more.
+A lightweight TypeScript CLI UI library for Node.js with ASCII tables, colorful logging, and rainbow effects.
 
 ## Installation
 
@@ -11,10 +11,10 @@ npm install sitolib
 ## Quick Start
 
 ```javascript
-import { Core, AsciiTable, Formatting, Hashing } from 'sitolib';
+import { Core, AsciiTable, Formatting } from 'sitolib';
 
 // Initialize Core
-const core = Core.getInstance();
+const core = new Core();
 core.start({ version: '1.0.0' });
 
 // Create a table
@@ -25,23 +25,22 @@ table.addRow('Server', 'Running');
 table.print();
 
 // Use formatting utilities
-const fmt = Formatting.getInstance();
-console.log(fmt.createDivider('SECTION'));
-
-// Hash strings
-const hash = Hashing.hashString('password123');
+console.log(Formatting.createDivider('SECTION'));
 ```
 
 ## Features
 
 - ASCII tables with customizable borders
+- Proper Unicode width handling (emojis, CJK characters)
 - Colorful console logging with labels
 - Rainbow text effects (horizontal & vertical)
-- Message queuing system
+- Event-driven message queue system
 - Centered text output
-- Custom color support
+- Custom color support (hex colors)
 - Alert boxes
 - MOTD (Message of the Day) display
+- Portable terminal clearing (uses tput on Unix)
+- Full TypeScript support with type definitions
 
 ## Usage
 
@@ -67,7 +66,7 @@ table.print();
 ```javascript
 import { Core } from 'sitolib';
 
-const core = Core.getInstance();
+const core = new Core();
 
 core.start({
   logoString: 'Your ASCII Logo',
@@ -92,8 +91,26 @@ core.writeLine({}, '#ff0000', 'Red ', '#00ff00', 'Green');
 core.createAlert('WARNING', '#ff0000', 'Important message');
 ```
 
+### Formatting
+
+```javascript
+import { Formatting } from 'sitolib';
+
+// Create dividers
+console.log(Formatting.createDivider());
+console.log(Formatting.createDivider('SECTION'));
+
+// Center text
+console.log(Formatting.center('Centered text'));
+
+// Pad text
+console.log(Formatting.space('Name', 20));
+```
+
 ## Projects that use this
 * [OpenMP Upgrader](https://github.com/ahmsito/openmp-upgrader)
+
+## API Reference
 
 ### AsciiTable
 
@@ -102,51 +119,42 @@ core.createAlert('WARNING', '#ff0000', 'Important message');
 
 Options:
 - `showDividers` (boolean): Show row dividers. Default: `true`
+- `centerOnWrite` (boolean): Center content when writing
+- `colors` (object): Custom color mappings
 
 #### Methods
-- `addColumn(header)` - Add a column
-- `addRow(...cells)` - Add a row
-- `removeColumnAt(index)` - Remove column
-- `removeRowAt(index)` - Remove row
-- `toString()` - Get table as string
-- `print()` - Print to console
+- `addColumn(header: string)` - Add a column
+- `addRow(...cells: (string | number)[])` - Add a row
+- `removeColumnAt(index: number)` - Remove column
+- `removeRowAt(index: number)` - Remove row
+- `toString(): string` - Get table as string
+- `print(): void` - Print to console
 
 ### Core
 
 #### Methods
-- `getInstance()` - Get singleton instance
-- `start(options)` - Initialize with logo, version, etc.
-- `writeLine(props, ...messages)` - Write formatted message
-- `createAlert(title, color, ...lines)` - Create alert box
+- `start(options: StartProps)` - Initialize with logo, version, etc.
+- `writeLine(props: WriteLineProps, ...messages: string[])` - Write formatted message
+- `createAlert(title: string, color: string, ...lines: string[])` - Create alert box
 - `clear()` - Clear console and reset
-- `delay(ms)` - Async delay
-- `readLine(prompt)` - Read user input
+- `delay(ms: number): Promise<void>` - Async delay
+- `readLine(prompt: string): Promise<string>` - Read user input
 
 #### Message Properties
-- `label` - { text: 'ok'|'fail'|'info'|'work'|'skip'|'conf'|'help' }
-- `time` - { show: boolean }
+- `label` - { text: 'ok'|'fail'|'info'|'work'|'skip'|'conf'|'help', show: boolean, color?: string }
+- `time` - { show: boolean, text?: string }
 - `horizontalRainbow` - Rainbow effect across text
 - `verticalRainbow` - Single color from rainbow
 - `center` - Center the text
 
-### Hashing
+### Formatting
 
-```javascript
-import { Hashing } from 'sitolib';
-
-// SHA256 (default)
-const hash = Hashing.hashString('password123');
-
-// MD5
-const md5 = Hashing.hashMD5('text');
-
-// SHA512
-const sha512 = Hashing.hashSHA512('text');
-
-// Custom algorithm
-const custom = Hashing.hash('text', 'sha1');
-```
+Static utility object with methods:
+- `createDivider(title?: string | null): string` - Create horizontal divider
+- `center(input: string): string` - Center text in terminal
+- `space(input: string, length: number): string` - Pad text to length
 
 ## License
 
 MIT
+

@@ -1,4 +1,4 @@
-import { Formatting } from './dist/index.js';
+import { Formatting } from 'sitolib';
 
 console.log('Simple divider:');
 console.log(Formatting.createDivider());
