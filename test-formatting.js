@@ -1,17 +1,15 @@
-import { Formatting } from './index.js';
-
-const fmt = Formatting.getInstance();
+import { Formatting } from './dist/index.js';
 
 console.log('Simple divider:');
-console.log(fmt.createDivider());
+console.log(Formatting.createDivider());
 
 console.log('\nDivider with title:');
-console.log(fmt.createDivider('SECTION'));
+console.log(Formatting.createDivider('SECTION'));
 
 console.log('\nCentered text:');
-console.log(fmt.center('This text is centered'));
+console.log(Formatting.center('This text is centered'));
 
 console.log('\nSpaced text:');
-console.log('[' + fmt.space('Name', 20) + ']');
-console.log('[' + fmt.space('Age', 20) + ']');
-console.log('[' + fmt.space('City', 20) + ']');
+console.log('[' + Formatting.space('Name', 20) + ']');
+console.log('[' + Formatting.space('Age', 20) + ']');
+console.log('[' + Formatting.space('City', 20) + ']');

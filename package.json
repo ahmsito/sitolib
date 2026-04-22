@@ -1,28 +1,45 @@
 {
   "name": "sitolib",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "A CLI UI library with ASCII table support and colorful logging",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
-    ".": "./index.js",
-    "./asciitable": "./cliui/asciitable/index.js",
-    "./core": "./cliui/core/index.js",
-    "./formatting": "./cliui/formatting/index.js",
-    "./hashing": "./security/hashing/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./asciitable": {
+      "types": "./dist/cliui/asciitable/index.d.ts",
+      "import": "./dist/cliui/asciitable/index.js"
+    },
+    "./core": {
+      "types": "./dist/cliui/core/index.d.ts",
+      "import": "./dist/cliui/core/index.js"
+    },
+    "./formatting": {
+      "types": "./dist/cliui/formatting/index.d.ts",
+      "import": "./dist/cliui/formatting/index.js"
+    }
   },
   "files": [
-    "cliui",
-    "security",
-    "index.js",
+    "dist",
     "README.md"
   ],
   "scripts": {
-    "test": "node test.js",
-    "test:core": "node test-core.js",
-    "test:table": "node test.js",
-    "test:formatting": "node test-formatting.js",
-    "test:hashing": "node test-hashing.js"
+    "build": "tsc && npm run minify",
+    "minify": "node scripts/minify.js",
+    "prepublishOnly": "npm run build",
+    "test": "npm run build && node test.js",
+    "test:core": "npm run build && node test-core.js",
+    "test:table": "npm run build && node test.js",
+    "test:formatting": "npm run build && node test-formatting.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "terser": "^5.46.1",
+    "typescript": "^5.9.3"
   },
   "keywords": [
     "cli",
@@ -33,10 +50,7 @@
     "colors",
     "rainbow",
     "terminal",
-    "console",
-    "hashing",
-    "sha256",
-    "security"
+    "console"
   ],
   "repository": {
     "type": "git",

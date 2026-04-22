@@ -1,6 +1,6 @@
-import { Core } from './cliui/core/index.js';
+import { Core } from './dist/index.js';
 
-const core = Core.getInstance();
+const core = new Core();
 
 //start the whole shi
 core.start({

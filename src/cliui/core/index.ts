@@ -1,31 +1,86 @@
 import { EventEmitter } from 'events';
 import { hostname } from 'os';
+import { execSync } from 'child_process';
+
+interface StartProps {
+  username?: string;
+  host?: string;
+  logoString?: string | null;
+  version?: string | null;
+  motd?: string | null;
+  author?: {
+    name?: string;
+    url?: string;
+  };
+  silentStart?: boolean;
+  debugMode?: boolean;
+  colorRotation?: number;
+  colorRotationOffset?: number;
+  showNextLine?: boolean;
+  userColor?: string;
+  hostColor?: string;
+}
+
+interface TimeConfig {
+  show: boolean;
+  text?: string;
+}
+
+interface LabelConfig {
+  show: boolean;
+  text?: string;
+  color?: string | null;
+}
+
+interface WriteLineProps {
+  time?: TimeConfig | null;
+  label?: LabelConfig | null;
+  horizontalRainbow?: boolean;
+  verticalRainbow?: boolean;
+  center?: boolean;
+  showHeaderAfter?: boolean;
+}
+
+interface MessageProps {
+  time: TimeConfig;
+  label: LabelConfig;
+  coloringGroups: Array<[string | null, string]>;
+  horizontalRainbow: boolean;
+  verticalRainbow: boolean;
+  center: boolean;
+  showHeaderAfter: boolean;
+}
+
+interface RGB {
+  r: number;
+  g: number;
+  b: number;
+}
 
 export class Core extends EventEmitter {
-  static instance = null;
-
-  static getInstance() {
-    if (!Core.instance) {
-      Core.instance = new Core();
-    }
-    return Core.instance;
-  }
+  private writeQueue: MessageProps[] = [];
+  private startProps: Required<StartProps> | null = null;
+  private pauseConsole = false;
+  private headerPrintedLast = false;
+  private colorRotation = 0;
+  private colorRotationStart = 0;
+  private processing = false;
 
   constructor() {
     super();
-    this.writeQueue = [];
-    this.startProps = null;
-    this.pauseConsole = false;
-    this.headerPrintedLast = false;
-    this.colorRotation = 0;
-    this.colorRotationStart = 0;
-    this.processing = false;
+    
+    // Event-driven queue processing
+    this.on('itemAdded', () => {
+      if (!this.processing && !this.pauseConsole) {
+        this._processQueue();
+      }
+    });
   }
 
-  start(startProps = {}) {
+  start(startProps: StartProps = {}): void {
     // Only clear screen if this is the first start
     if (!this.startProps) {
-      process.stdout.write('\x1Bc');
+      this._clearScreen();
     }
     
     this.startProps = {
@@ -35,11 +90,11 @@ export class Core extends EventEmitter {
       version: startProps.version || null,
       motd: startProps.motd || null,
       author: startProps.author || {},
-      silentStart: startProps.silentStart || true,
-      debugMode: startProps.debugMode || false,
-      colorRotation: startProps.colorRotation || 0,
-      colorRotationOffset: startProps.colorRotationOffset || 5,
-      showNextLine: startProps.showNextLine || false,
+      silentStart: startProps.silentStart ?? true,
+      debugMode: startProps.debugMode ?? false,
+      colorRotation: startProps.colorRotation ?? 0,
+      colorRotationOffset: startProps.colorRotationOffset ?? 5,
+      showNextLine: startProps.showNextLine ?? false,
       userColor: startProps.userColor || '#0354cc',
       hostColor: startProps.hostColor || '#6407f7'
     };
@@ -48,25 +103,38 @@ export class Core extends EventEmitter {
     this.colorRotationStart = this.startProps.colorRotation;
 
     this.printLogo();
-    
-    if (!this.processing) {
-      this.startWorkLoop();
-    }
 
     if (!this.startProps.silentStart) {
-      this.writeLine({ label: { text: 'ok' } }, 'Core initialized');
+      this.writeLine({ label: { show: true, text: 'ok' } }, 'Core initialized');
     }
   }
 
-  clear() {
+  private _clearScreen(): void {
+    // Use tput to get the correct clear sequence for the current terminal
+    // This queries the terminfo database for the terminal-specific command
+    if (process.stdout.isTTY && process.platform !== 'win32') {
+      try {
+        const clearSeq = execSync('tput clear', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+        process.stdout.write(clearSeq);
+      } catch (err) {
+        // Fallback to console.clear if tput fails
+        console.clear();
+      }
+    } else {
+      // Windows or non-TTY: use console.clear which handles it internally
+      console.clear();
+    }
+  }
+
+  clear(): void {
     this.writeQueue = [];
     this.colorRotation = this.colorRotationStart;
-    console.clear();
+    this._clearScreen();
     this.printLogo();
     this.emit('clear');
   }
 
-  printLogo() {
+  printLogo(): void {
     if (this.startProps?.logoString) {
       const lines = this.startProps.logoString.split('\n');
       lines.forEach(line => {
@@ -97,19 +165,19 @@ export class Core extends EventEmitter {
     }
   }
 
-  printMOTD() {
+  printMOTD(): void {
     const divider = '═'.repeat(60);
     const halfDiv = divider.substring(0, Math.round(divider.length / 2));
     
     this.writeLine({ horizontalRainbow: true, label: { show: false }, time: { show: false }, center: true }, `${halfDiv} MOTD ${halfDiv}`);
     this.writeLine({ label: { show: false }, time: { show: false } });
-    this.writeLine({ label: { show: false }, time: { show: false }, center: true }, this.startProps.motd);
+    this.writeLine({ label: { show: false }, time: { show: false }, center: true }, this.startProps!.motd!);
     this.writeLine({ label: { show: false }, time: { show: false } });
     this.writeLine({ horizontalRainbow: true, label: { show: false }, time: { show: false }, center: true }, `${halfDiv} MOTD ${halfDiv}`);
     this.writeLine({ label: { show: false }, time: { show: false } });
   }
 
-  createAlert(title, color, ...lines) {
+  createAlert(title: string, color: string, ...lines: string[]): void {
     const divider = '═'.repeat(60);
     const halfDiv = divider.substring(0, Math.round(divider.length / 2));
     
@@ -123,7 +191,7 @@ export class Core extends EventEmitter {
     this.writeLine({ label: { show: false }, time: { show: false } });
   }
 
-  writeLine(props = {}, ...messages) {
+  writeLine(props: WriteLineProps = {}, ...messages: string[]): void {
     if (arguments.length === 0 || (Object.keys(props).length === 0 && messages.length === 0)) {
       this.writeQueue.push({
         time: { show: false },
@@ -142,8 +210,8 @@ export class Core extends EventEmitter {
     this.emit('itemAdded', msgProps);
   }
 
-  _parseMessageProps(props, messages) {
-    const defaults = {
+  private _parseMessageProps(props: WriteLineProps, messages: string[]): MessageProps {
+    const defaults: MessageProps = {
       time: { show: true, text: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
       label: { show: true, text: 'info', color: null },
       coloringGroups: [],
@@ -172,7 +240,7 @@ export class Core extends EventEmitter {
       }
     }
 
-    let currentColor = '#c8c8c8';
+    let currentColor: string | null = '#c8c8c8';
     messages.forEach(msg => {
       if (typeof msg === 'string' && msg.startsWith('#') && msg.length === 7) {
         currentColor = msg;
@@ -184,8 +252,8 @@ export class Core extends EventEmitter {
     return defaults;
   }
 
-  _autoFormatLabel(label) {
-    const labelMap = {
+  private _autoFormatLabel(label: LabelConfig): LabelConfig {
+    const labelMap: Record<string, { color: string; text: string }> = {
       ok: { color: '#00ff00', text: '  OK  ' },
       success: { color: '#00ff00', text: '  OK  ' },
       work: { color: '#ffff00', text: ' WORK ' },
@@ -199,36 +267,35 @@ export class Core extends EventEmitter {
       help: { color: '#006400', text: ' HELP ' }
     };
 
-    const key = label.text.toLowerCase();
+    const key = label.text?.toLowerCase() || '';
     if (labelMap[key]) {
       return { ...label, ...labelMap[key], text: labelMap[key].text.toUpperCase() };
     }
     return label;
   }
 
-  startWorkLoop() {
+  private _processQueue(): void {
+    if (this.processing || this.pauseConsole || this.writeQueue.length === 0) {
+      return;
+    }
+
     this.processing = true;
-    setImmediate(() => this._workLoop());
-  }
-
-  _workLoop() {
-    if (!this.processing) return;
-
-    if (this.writeQueue.length > 0 && !this.pauseConsole) {
-      const props = this.writeQueue.shift();
+    
+    while (this.writeQueue.length > 0 && !this.pauseConsole) {
+      const props = this.writeQueue.shift()!;
       this._processWrite(props);
       this.emit('itemFinished', props);
     }
-
-    setImmediate(() => this._workLoop());
+    
+    this.processing = false;
   }
 
-  _processWrite(props) {
+  private _processWrite(props: MessageProps): void {
     let output = '';
 
     if (props.time?.show) {
       const timeColor = this._hsvToRgb(this.colorRotation, 1, 1);
-      output += `[${this._colorize(props.time.text, timeColor)}] `;
+      output += `[${this._colorize(props.time.text!, timeColor)}] `;
     }
 
     if (props.center) {
@@ -260,9 +327,9 @@ export class Core extends EventEmitter {
     }
 
     if (props.label?.show) {
-      const remaining = process.stdout.columns - this._stripAnsi(output).length - props.label.text.length - 4;
+      const remaining = process.stdout.columns - this._stripAnsi(output).length - props.label.text!.length - 4;
       output += ' '.repeat(Math.max(0, remaining));
-      output += ` [${this._colorize(props.label.text, props.label.color)}]`;
+      output += ` [${this._colorize(props.label.text!, props.label.color || null)}]`;
     }
 
     console.log(output);
@@ -271,14 +338,13 @@ export class Core extends EventEmitter {
     if (this.colorRotation >= 360) this.colorRotation = 0;
   }
 
-  _colorize(text, color) {
+  private _colorize(text: string, color: string | RGB | null): string {
     if (!color) return text;
-    const rgb = this._hexToRgb(color);
+    const rgb = typeof color === 'string' ? this._hexToRgb(color) : color;
     return `\x1b[38;2;${rgb.r};${rgb.g};${rgb.b}m${text}\x1b[0m`;
   }
 
-  _hexToRgb(hex) {
-    if (typeof hex === 'object') return hex;
+  private _hexToRgb(hex: string): RGB {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
@@ -287,12 +353,12 @@ export class Core extends EventEmitter {
     } : { r: 200, g: 200, b: 200 };
   }
 
-  _hsvToRgb(h, s, v) {
+  private _hsvToRgb(h: number, s: number, v: number): RGB {
     const c = v * s;
     const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     const m = v - c;
     
-    let r, g, b;
+    let r: number, g: number, b: number;
     if (h < 60) [r, g, b] = [c, x, 0];
     else if (h < 120) [r, g, b] = [x, c, 0];
     else if (h < 180) [r, g, b] = [0, c, x];
@@ -307,11 +373,11 @@ export class Core extends EventEmitter {
     };
   }
 
-  _stripAnsi(str) {
+  private _stripAnsi(str: string): string {
     return str.replace(/\x1b\[[0-9;]*m/g, '');
   }
 
-  delay(ms) {
+  delay(ms: number): Promise<void> {
     return new Promise(resolve => {
       const check = () => {
         if (this.writeQueue.length === 0) {
@@ -324,7 +390,7 @@ export class Core extends EventEmitter {
     });
   }
 
-  async readLine(prompt = '') {
+  async readLine(prompt = ''): Promise<string> {
     const readline = await import('readline');
     return new Promise(resolve => {
       const rl = readline.createInterface({

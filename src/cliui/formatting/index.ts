@@ -1,14 +1,5 @@
-export class Formatting {
-  static instance = null;
-
-  static getInstance() {
-    if (!Formatting.instance) {
-      Formatting.instance = new Formatting();
-    }
-    return Formatting.instance;
-  }
-
-  createDivider(title = null) {
+export const Formatting = {
+  createDivider(title: string | null = null): string {
     const width = Math.round(process.stdout.columns / 1.25);
     const divider = '═'.repeat(width);
     
@@ -18,15 +9,15 @@ export class Formatting {
     }
     
     return divider;
-  }
+  },
 
-  center(input) {
+  center(input: string): string {
     const padding = Math.round((process.stdout.columns / 2) - (input.length / 2));
     return ' '.repeat(Math.max(0, padding)) + input;
-  }
+  },
 
-  space(input, length) {
+  space(input: string, length: number): string {
     const spacesNeeded = length - input.length;
     return input + ' '.repeat(Math.max(0, spacesNeeded));
   }
-}
+};

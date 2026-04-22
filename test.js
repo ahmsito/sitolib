@@ -1,4 +1,4 @@
-import { AsciiTable } from './cliui/asciitable/index.js';
+import { AsciiTable } from './dist/index.js';
 
 // Create a new table
 const table = new AsciiTable({ showDividers: true });
