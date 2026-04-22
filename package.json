@@ -40,13 +40,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/sitolib.git"
+    "url": "https://github.com/ahmsito/sitolib"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/sitolib/issues"
+    "url": "https://github.com/ahmsito/sitolib/issues"
   },
-  "homepage": "https://github.com/yourusername/sitolib#readme",
-  "author": "",
+  "homepage": "https://github.com/ahmsito/sitolib#readme",
+  "author": "ahmesito",
   "license": "MIT",
   "engines": {
     "node": ">=14.0.0"
